@@ -15,10 +15,16 @@
 # [START app]
 
 import string
-import urllib.request
-import lxml.html
+#import urllib.request as urlrequest
+import urllib2 as urlrequest
 
 import logging
+
+try:
+    import lxml.html
+except ImportError:
+    logging.fatal("lxml not loaded")
+    raise
 
 from flask import Flask, url_for, abort, render_template
 
@@ -42,7 +48,7 @@ def sheet(sid, gid):
         .format(sid=sid, gid=gid) )
     parser = lxml.html.HTMLParser(encoding="utf-8")
     try:
-        html = lxml.html.fromstring(urllib.request.urlopen(docs_href).read(),
+        html = lxml.html.fromstring(urlrequest.urlopen(docs_href).read(),
             parser=parser )
     except urllib.error.HTTPError:
         abort(404)
