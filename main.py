@@ -21,6 +21,7 @@ import urllib2 as urlrequest
 import logging
 
 try:
+    import lxml.etree
     import lxml.html
 except ImportError:
     logging.fatal("lxml not loaded")
