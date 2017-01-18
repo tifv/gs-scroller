@@ -55,7 +55,7 @@ def sheet(sid, gid):
     try:
         html = lxml.html.fromstring(urlrequest.urlopen(docs_href).read(),
             parser=parser )
-    except urllib.error.HTTPError:
+    except urlrequest.HTTPError:
         abort(404)
     for script in html.iter('script'):
         script.getparent().remove(script)
