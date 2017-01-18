@@ -26,7 +26,11 @@ except ImportError:
     logging.fatal("lxml not loaded")
     raise
 
-from flask import Flask, url_for, abort, render_template
+try:
+    from flask import Flask, url_for, abort, render_template
+except ImportError:
+    logging.fatal("flask not loaded")
+    raise
 
 
 app = Flask(__name__)
