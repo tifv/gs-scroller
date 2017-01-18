@@ -1,20 +1,5 @@
-# Copyright 2015 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# [START app]
-
 import string
+
 #import urllib.request as urlrequest
 import urllib2 as urlrequest
 
@@ -60,17 +45,23 @@ def sheet(sid, gid):
     for script in html.iter('script'):
         script.getparent().remove(script)
     html.find('head/link').rewrite_links(lambda s: 'https://docs.google.com' + s)
+    html.find('head').append(lxml.html.Element(
+        'link', rel='stylesheet', href=url_for('static', filename='metatable.css'),
+    ))
     html.find('body').append(lxml.html.Element(
         'script', src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"
     ))
     html.find('body').append(lxml.html.Element(
-        'script', src=url_for('static', filename='convert.js')
+        'script', src=url_for('static', filename='metatable.js')
     ))
     script = lxml.html.Element('script')
     script.text = ( "$(init); "
         "function init() { "
             "$('body').css('overflow', 'hidden'); "
-            "split_and_rock( $('#sheets-viewport table'));"
+            "var $table = $('#sheets-viewport table').detach(); "
+            "var $metatable = create_metatable($table); "
+            "$('body').empty().append($metatable); "
+            "$metatable.resize(); "
         " }" )
     html.find('body').append(script)
     return b'<!DOCTYPE html><meta charset="UTF-8">' + lxml.html.tostring(html)
@@ -84,8 +75,5 @@ def sheet(sid, gid):
 #    """.format(e), 500
 
 if __name__ == '__main__':
-    # This is used when running locally. Gunicorn is used to run the
-    # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
 
-# [END app]
