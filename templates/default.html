@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+{# vim: set sw=2 ft=jinja : #}
+<meta charset="UTF-8">
+<html><body>
+  <div>Spreadsheet ID:
+    <input id="sid" />
+  </div>
+  <div>Sheet ID (gid):
+    <input id="gid" />
+  </div>
+  <button onclick="enter()">Confirm</button>
+<script>
+  function enter() {
+    var sid = document.getElementById('sid').value;
+    var gid = document.getElementById('gid').value;
+    if (sid.indexOf('/') > -1) {
+      alert("Spreadsheet ID cannot contain slashes.");
+      return;
+    }
+    if (gid.indexOf('/') > -1) {
+      alert("Sheet ID (gid) cannot contain slashes.");
+      return;
+    }
+    window.location.href = "/" + sid + "/" + gid;
+  }
+</script>
+</body>
+</html>
