@@ -1,7 +1,7 @@
 import string
 
-#import urllib.request as urlrequest
-import urllib2 as urlrequest
+from urllib2 import urlopen, HTTPError
+from httplib import HTTPException
 
 import logging
 
@@ -38,10 +38,14 @@ def sheet(sid, gid):
         .format(sid=sid, gid=gid) )
     parser = lxml.html.HTMLParser(encoding="utf-8")
     try:
-        html = lxml.html.fromstring(urlrequest.urlopen(docs_href).read(),
+        html = lxml.html.fromstring(urlopen(docs_href).read(),
             parser=parser )
-    except urlrequest.HTTPError:
-        abort(404)
+    except HTTPError as error:
+        if error.code == 404 or error.code == 400:
+            raise Google404(sid, gid)
+        raise
+    except HTTPException:
+        raise GoogleNotResponding()
     for script in html.iter('script'):
         script.getparent().remove(script)
     html.find('head/link').rewrite_links(lambda s: 'https://docs.google.com' + s)
@@ -66,13 +70,19 @@ def sheet(sid, gid):
     html.find('body').append(script)
     return b'<!DOCTYPE html><meta charset="UTF-8">' + lxml.html.tostring(html)
 
-#@app.errorhandler(500)
-#def server_error(e):
-#    logging.exception('An error occurred during a request.')
-#    return """
-#    An internal error occurred: <pre>{}</pre>
-#    See logs for full stacktrace.
-#    """.format(e), 500
+class Google404(Exception):
+    pass
+
+class GoogleNotResponding(Exception):
+    pass
+
+@app.errorhandler(Google404)
+def sheet_not_found(exception):
+    return render_template('google-404.html'), 404
+
+@app.errorhandler(GoogleNotResponding)
+def sheet_timeout(exception):
+    return render_template('google-504.html'), 504
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
