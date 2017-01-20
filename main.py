@@ -1,40 +1,33 @@
-import string
-
 from urllib2 import urlopen, HTTPError
 from httplib import HTTPException
 
-import logging
+import lxml.html
 
-try:
-    import lxml.etree
-    import lxml.html
-except ImportError:
-    logging.fatal("lxml not loaded")
-    raise
+from flask import Flask, url_for, abort, render_template
 
-try:
-    from flask import Flask, url_for, abort, render_template
-except ImportError:
-    logging.fatal("flask not loaded")
-    raise
-
+from util import ( Base64Converter, DigitsConverter,
+    TemporaryError, temporary_cache )
 
 app = Flask(__name__)
+
+
+app.url_map.converters['base64'] = Base64Converter
+app.url_map.converters['digits'] = DigitsConverter
 
 
 @app.route('/')
 def default():
     return render_template('default.html')
 
-BASE64_ALPHABET = string.digits + string.ascii_uppercase + string.ascii_lowercase + "_-"
-
-@app.route('/<sid>/<gid>')
+@app.route('/<base64:sid>/<digits:gid>')
 def sheet(sid, gid):
-    if not all(s in BASE64_ALPHABET for s in sid):
-        raise ValueError("Spreadsheet ID must be wrong")
-    if not gid.isdigit():
-        raise ValueError("Sheet ID (gid) must be wrong")
-    docs_href = ( 'https://docs.google.com/spreadsheets/d/{sid}/pubhtml/sheet?gid={gid}'
+    return convert_google_sheet(sid, gid)
+
+@temporary_cache(60*5, 60*10)
+def convert_google_sheet(sid, gid):
+
+    docs_href = (
+        'https://docs.google.com/spreadsheets/d/{sid}/pubhtml/sheet?gid={gid}'
         .format(sid=sid, gid=gid) )
     parser = lxml.html.HTMLParser(encoding="utf-8")
     try:
@@ -46,17 +39,19 @@ def sheet(sid, gid):
         raise
     except HTTPException:
         raise GoogleNotResponding()
+
     for script in html.iter('script'):
         script.getparent().remove(script)
-    html.find('head/link').rewrite_links(lambda s: 'https://docs.google.com' + s)
-    html.find('head').append(lxml.html.Element(
-        'link', rel='stylesheet', href=url_for('static', filename='metatable.css'),
+    html.find('head/link').rewrite_links(
+        lambda s: 'https://docs.google.com' + s )
+    html.find('head').append(lxml.html.Element( 'link',
+        rel='stylesheet', href=url_for('static', filename='metatable.css'),
     ))
-    html.find('body').append(lxml.html.Element(
-        'script', src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"
+    html.find('body').append(lxml.html.Element( 'script',
+        src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"
     ))
-    html.find('body').append(lxml.html.Element(
-        'script', src=url_for('static', filename='metatable.js')
+    html.find('body').append(lxml.html.Element( 'script',
+        src=url_for('static', filename='metatable.js')
     ))
     script = lxml.html.Element('script')
     script.text = ( "$(init); "
@@ -68,12 +63,13 @@ def sheet(sid, gid):
             "$metatable.resize(); "
         " }" )
     html.find('body').append(script)
-    return b'<!DOCTYPE html><meta charset="UTF-8">' + lxml.html.tostring(html)
+    return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
+        lxml.html.tostring(html, encoding='utf-8')
 
 class Google404(Exception):
     pass
 
-class GoogleNotResponding(Exception):
+class GoogleNotResponding(TemporaryError):
     pass
 
 @app.errorhandler(Google404)
@@ -83,6 +79,10 @@ def sheet_not_found(exception):
 @app.errorhandler(GoogleNotResponding)
 def sheet_timeout(exception):
     return render_template('google-504.html'), 504
+
+@app.errorhandler(404)
+def sheet_not_found(exception):
+    return render_template('404.html'), 404
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
