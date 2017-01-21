@@ -18,6 +18,12 @@ class TemporaryError(Exception):
 def temporary_cache(timeout_min, timeout_max):
     def wrapper(function):
         cache = dict()
+        def cleanup(current_time):
+            old_keys = { key
+                for key, (cached_result, cached_time) in cache.items()
+                if cached_time < current_time - timeout_max }
+            for key in old_keys:
+                del cache[key]
         @wraps(function)
         def wrapped(*args):
             current_time = time.time()
@@ -33,6 +39,7 @@ def temporary_cache(timeout_min, timeout_max):
                 else:
                     raise
             else:
+                cleanup(current_time)
                 cache[args] = result, current_time
                 return result
         return wrapped
