@@ -1,8 +1,8 @@
-// vim: set sw=2 foldmethod=marker :
-function create_metatable($table) { // {{{
+function create_metatable($table) { // {{{1
   $table.$head = $table.children('thead').first();
   $table.$body = $table.children('tbody').first();
-  function create_metacell() {
+
+  function create_metacell() { // {{{
     var $metacell =  $('<td />').addClass('metacell')
       .addClass('ritz'); // "ritz" is expected by google CSS
     $metacell.$scroller = $('<div />').addClass('scroller')
@@ -18,7 +18,7 @@ function create_metatable($table) { // {{{
     $metacell.$table.$body = $($table.$body[0].cloneNode())
       .appendTo($metacell.$table);
     return $metacell;
-  }
+  } // }}}
   var $FF = create_metacell().addClass('frozen-rows frozen-columns');
   var $FM = create_metacell().addClass('frozen-rows moving-columns');
   var $MF = create_metacell().addClass('moving-rows frozen-columns');
@@ -80,7 +80,7 @@ function create_metatable($table) { // {{{
     });
   } // }}}
 
-  $AA.resize = function() {
+  $AA.resize = function() { // {{{
     var dA = {
       width:  $(window).width(),
       height: $(window).height() };
@@ -107,33 +107,33 @@ function create_metatable($table) { // {{{
     $FM.$overlay.css({width: M.width, height: F.height});
     $MF.$overlay.css({width: F.width, height: M.height});
     $MM.$overlay.css({width: M.width, height: M.height});
-  }
+  } // }}}
   $(window).resize($AA.resize);
 
-  $MM.$scroller.scroll(function() {
+  $MM.$scroller.scroll(function() { // {{{
     var position = {
       left: $MM.$scroller.scrollLeft(),
       top:  $MM.$scroller.scrollTop() };
     $MM.$table.css({'left' : -position.left, 'top'  : -position.top});
     $MF.$table.css({'top'  : -position.top});
     $FM.$table.css({'left' : -position.left});
-  });
+  }); // }}}
 
-  $MF.$scroller.scroll(function() {
+  $MF.$scroller.scroll(function() { // {{{
     var position = {
       left: $MF.$scroller.scrollLeft() };
     $MF.$table.css({'left' : -position.left});
     $FF.$table.css({'left' : -position.left});
-  });
+  }); // }}}
 
-  $FM.$scroller.scroll(function() {
+  $FM.$scroller.scroll(function() { // {{{
     var position = {
       top: $FM.$scroller.scrollTop() };
     $FM.$table.css({'top' : -position.top});
     $FF.$table.css({'top' : -position.top});
-  });
+  }); // }}}
 
   return $AA;
 
-} // }}}
+}
 
