@@ -4,8 +4,6 @@ import time
 
 import werkzeug.routing
 
-BASE64_ALPHABET = string.digits + string.ascii_uppercase + string.ascii_lowercase + "_-"
-
 class Base64Converter(werkzeug.routing.BaseConverter):
     regex = '[0-9a-zA-Z_\-]+'
 
