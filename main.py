@@ -6,7 +6,7 @@ import lxml.html
 from flask import Flask, url_for, abort, render_template
 
 from util import ( Base64Converter, DigitsConverter,
-    TemporaryError, temporary_cache )
+    temporary_cache )
 
 app = Flask(__name__)
 
@@ -23,7 +23,7 @@ def default():
 def sheet(sid, gid):
     return convert_google_sheet(sid, gid)
 
-@temporary_cache(60*5, 60*10)
+@temporary_cache(60*5)
 def convert_google_sheet(sid, gid):
 
     docs_href = (
@@ -69,7 +69,7 @@ def convert_google_sheet(sid, gid):
 class Google404(Exception):
     pass
 
-class GoogleNotResponding(TemporaryError):
+class GoogleNotResponding(Exception):
     pass
 
 @app.errorhandler(Google404)
