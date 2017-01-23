@@ -1,34 +1,47 @@
-.metatable .metacell {
-    display: table-cell;
-    margin: 0px; padding: 0px;
-    border-style: solid;
-    border-color: #dadfe8;
-    border-width: 0px;
-}
 .metatable {
     border: 0px; padding: 0px; margin: 0px;
     border-collapse: collapse;
 }
-.metatable .metacell.frozen-rows {
-    /* sync with metatable.js */
+.metacell {
+    margin: 0px; padding: 0px;
+    border-style: solid;
+    border-color: #dadfe8;
+    border-width: 0px;
+    position: relative; left: 0px; top: 0px;
+    overflow: hidden;
+}
+.metacell.frozen-rows {
     border-bottom-width: 3px;
 }
-.metatable .metacell.frozen-columns {
-    /* sync with metatable.js */
+.metacell.frozen-columns {
     border-right-width: 3px;
 }
-.metatable .metacell.frozen-rows .scroller {
+.no-frozen-rows .metacell.frozen-rows {
+    border-bottom-width: 0px;
+}
+.no-frozen-columns .metacell.frozen-columns {
+    border-right-width: 0px;
+}
+.metacell > .scroller {
+    position: relative; left: 0px; top: 0px;
+    z-index: 0;
+}
+.metacell.frozen-rows > .scroller {
     overflow-x: hidden;
 }
-.metatable .metacell.moving-rows .scroller {
+.metacell.moving-rows > .scroller {
     overflow-x: scroll;
 }
-.metatable .metacell.frozen-columns .scroller {
+.metacell.frozen-columns > .scroller {
     overflow-y: hidden;
 }
-.metatable .metacell.moving-columns .scroller {
+.metacell.moving-columns > .scroller {
     overflow-y: scroll;
 }
-.metatable .pager > table {
+.metacell > .pager {
+    position: absolute; left: 0px; top: 0px;
+    z-index: -1;
+}
+.metacell > .pager > table {
     position: relative;
 }
