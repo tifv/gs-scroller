@@ -2,6 +2,7 @@ from __future__ import division, unicode_literals
 
 from urllib2 import urlopen, HTTPError
 from httplib import HTTPException
+import re
 
 import lxml.html
 
@@ -55,6 +56,26 @@ def convert_google_sheet(sid, gid):
     html.find('body').append(script)
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
+
+def google_spreadsheet_gids(sid):
+    return _google_spreadsheet_gids(sid).split(',')
+
+@temporary_cache(60*5)
+def _google_spreadsheet_gids(sid):
+    html = parse_google_document(
+        'https://docs.google.com/spreadsheets/d/{sid}/pubhtml?widget=true'
+        .format(sid=sid) )
+
+    gids = []
+    for script in html.iter('script'):
+        if script.text is None:
+            continue
+        for match in re.finditer('gid: "(?P<gid>\d+)"', script.text):
+            gids.append(match.group('gid'))
+        if gids:
+            break
+    return ','.join(gids)
+
 
 parser = lxml.html.HTMLParser(encoding="utf-8")
 def parse_google_document(url, parser=parser):
