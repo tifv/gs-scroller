@@ -85,7 +85,7 @@ def google_spreadsheet_sheets(sid):
     return sheets
 
 PARSER = lxml.html.HTMLParser(encoding="utf-8")
-def parse_google_document(url, parser=parser):
+def parse_google_document(url, parser=PARSER):
     try:
         html_string = urlopen(url).read()
     except HTTPError as error:
@@ -94,7 +94,7 @@ def parse_google_document(url, parser=parser):
         raise
     except HTTPException:
         raise GoogleNotResponding(url)
-    return lxml.html.fromstring(html_string, parser=PARSER)
+    return lxml.html.fromstring(html_string, parser=parser)
 
 class Google404(Exception):
     pass
