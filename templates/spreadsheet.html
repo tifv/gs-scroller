@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+
+<head>
+<style>
+  body, table, thead, tfoot, tr, td, iframe, div, button {
+    margin: 0px; border-width: 0px; padding: 0px;
+    border-spacing: 0px
+  }
+  #main {
+    width: 100%;
+  }
+  #main > tbody > tr:not(:first-child) > td {
+    border-top-width: 4px;
+    border-top-style: ridge;
+  }
+  #switcher .tab {
+    display: inline-block;
+    margin: 5px; border-width: 3px; padding: 5px 10px;
+    border-style: outset;
+    background: #e9e9e9;
+  }
+  #switcher .tab:not(:first-child) {
+    margin-left: 0px;
+  }
+  #switcher .tab.enabled {
+    border-style: inset;
+    background: #ffffff;
+  }
+</style>
+</head>
+
+<body>
+
+  <table id="main">
+  <tbody>
+  <tr id="container-row">
+    <td id="container"></td>
+  </tr>
+  <tr id="switcher-row">
+    <td id="switcher"></td>
+  </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+  </table>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
+</script>
+<script>
+
+  const sid = "{{ sid }}";
+  const sheets = [ {% for sheet in sheets %}
+    {name: "{{ sheet['name'] }}", gid: "{{ sheet['gid'] }}"},
+  {%- endfor %} ];
+
+  $(init);
+  function init() {
+    var switcher = $('#switcher');
+    for (var i = 0; i < sheets.length; ++i) {
+      var sheet = sheets[i];
+      switcher.append( $('<div class="tab"/>')
+        .attr('gid', sheet.gid)
+        .text(sheet.name)
+        .click(function() { sheet_show($(this).attr('gid')); })
+      );
+    }
+    $(window).resize(resize);
+    resize();
+    follow_hash();
+  }
+
+  function resize() {
+    $('#container-row').css({
+      height: $(window).height() - $('#switcher-row').height()
+    });
+  }
+
+  function follow_hash() {
+    if (/^#\d+$/.test(window.location.hash)) {
+      sheet_show(window.location.hash.substring(1), true);
+    } else {
+      sheet_show($('#switcher > .tab').first().attr('gid'));
+    }
+  }
+
+  function sheet_show(gid, dont_update_hash) {
+    $('#switcher > .tab').removeClass('enabled');
+    $('#switcher > .tab[gid="' + gid + '"]').addClass('enabled');
+    $('#container > iframe').css({display: 'none'});
+    if (!dont_update_hash)
+      window.location.hash = gid;
+    var frame = $('#container > iframe#' + gid);
+    if (frame.length < 1) {
+      $('#container').append(
+        $('<iframe width="100%" height="100%"/>')
+          .attr({id: gid, src: '/' + sid + '/' + gid })
+      );
+    } else {
+      frame.css({display: 'block'});
+    }
+  }
+
+</script>
+
+</body>
+
+</html>

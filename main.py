@@ -26,6 +26,11 @@ def default():
 def sheet(sid, gid):
     return convert_google_sheet(sid, gid)
 
+@app.route('/<base64:sid>/')
+def spreadsheet(sid):
+    sheets = google_spreadsheet_sheets(sid)
+    return render_template('spreadsheet.html', sid=sid, sheets=sheets)
+
 @temporary_cache(60*5)
 def convert_google_sheet(sid, gid):
     html = parse_google_document(
@@ -57,25 +62,27 @@ def convert_google_sheet(sid, gid):
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
 
-def google_spreadsheet_gids(sid):
-    return _google_spreadsheet_gids(sid).split(',')
-
+SHEET_PATTERN = re.compile(
+    r'{[^{}]*'
+        r'name: "(?P<name>[^"]+)"'
+    r'[^{}]*'
+        r'gid: "(?P<gid>\d+)"'
+    r'[^{}]*}' )
 @temporary_cache(60*5)
-def _google_spreadsheet_gids(sid):
+def google_spreadsheet_sheets(sid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml?widget=true'
         .format(sid=sid) )
 
-    gids = []
+    sheets = []
     for script in html.iter('script'):
         if script.text is None:
             continue
-        for match in re.finditer('gid: "(?P<gid>\d+)"', script.text):
-            gids.append(match.group('gid'))
-        if gids:
+        for match in SHEET_PATTERN.finditer(script.text):
+            sheets.append(match.groupdict())
+        if sheets:
             break
-    return ','.join(gids)
-
+    return sheets
 
 parser = lxml.html.HTMLParser(encoding="utf-8")
 def parse_google_document(url, parser=parser):
