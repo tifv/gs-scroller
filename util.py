@@ -1,3 +1,5 @@
+from __future__ import division, unicode_literals
+
 import string
 from functools import wraps
 import time
@@ -52,8 +54,10 @@ def temporary_cache(timeout):
                 if cached_result is not None:
                     return cached_result
                 result = function(*args)
-                if len(result) < 2**19:
+                try:
                     memcache.add(key, result, timeout)
+                except ValueError:
+                    pass
                 return result
             return wrapped
     return wrapper

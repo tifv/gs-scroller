@@ -1,3 +1,5 @@
+from __future__ import division, unicode_literals
+
 from urllib2 import urlopen, HTTPError
 from httplib import HTTPException
 
@@ -25,21 +27,9 @@ def sheet(sid, gid):
 
 @temporary_cache(60*5)
 def convert_google_sheet(sid, gid):
-
-    docs_href = (
+    html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml/sheet?gid={gid}'
         .format(sid=sid, gid=gid) )
-    parser = lxml.html.HTMLParser(encoding="utf-8")
-    try:
-        html = lxml.html.fromstring(urlopen(docs_href).read(),
-            parser=parser )
-    except HTTPError as error:
-        if error.code == 404 or error.code == 400:
-            raise Google404(sid, gid)
-        raise
-    except HTTPException:
-        raise GoogleNotResponding()
-
     for script in html.iter('script'):
         script.getparent().remove(script)
     html.find('head/link').rewrite_links(
@@ -65,6 +55,18 @@ def convert_google_sheet(sid, gid):
     html.find('body').append(script)
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
+
+parser = lxml.html.HTMLParser(encoding="utf-8")
+def parse_google_document(url, parser=parser):
+    try:
+        html_string = urlopen(url).read()
+    except HTTPError as error:
+        if error.code == 404 or error.code == 400:
+            raise Google404(sid, gid)
+        raise
+    except HTTPException:
+        raise GoogleNotResponding()
+    return lxml.html.fromstring(html_string, parser=parser)
 
 class Google404(Exception):
     pass
