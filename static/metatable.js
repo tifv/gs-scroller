@@ -7,10 +7,8 @@ function create_metatable($table) { // {{{1
       .addClass('ritz'); // "ritz" is expected by google CSS
     $metacell.$scroller = $('<div />').addClass('scroller')
       .appendTo($metacell);
-    $metacell.$overlay = $('<div />').addClass('overlay')
-      .appendTo($metacell.$scroller);
     $metacell.$pager = $('<div />').addClass('pager')
-      .appendTo($metacell);
+      .appendTo($metacell.$scroller);
     $metacell.$table = $($table[0].cloneNode())
       .appendTo($metacell.$pager);
     $metacell.$table.$head = $($table.$head[0].cloneNode())
@@ -90,9 +88,9 @@ function create_metatable($table) { // {{{1
     var F = {
       width:  Math.max($FF.$table.width(),  $MF.$table.width()),
       height: Math.max($FF.$table.height(), $FM.$table.height()) };
-    var M = {
+    /* var M = {
       width:  Math.max($FM.$table.width(),  $MM.$table.width()),
-      height: Math.max($MF.$table.height(), $MM.$table.height()) };
+      height: Math.max($MF.$table.height(), $MM.$table.height()) }; */
     var dF = {
       width:  Math.min(F.width,  dA.width  / 2.0),
       height: Math.min(F.height, dA.height / 2.0) };
@@ -103,10 +101,6 @@ function create_metatable($table) { // {{{1
     $FM.$scroller.css({width: dM.width, height: dF.height});
     $MF.$scroller.css({width: dF.width, height: dM.height});
     $MM.$scroller.css({width: dM.width, height: dM.height});
-    $FF.$overlay.css({width: F.width, height: F.height});
-    $FM.$overlay.css({width: M.width, height: F.height});
-    $MF.$overlay.css({width: F.width, height: M.height});
-    $MM.$overlay.css({width: M.width, height: M.height});
   } // }}}
   $(window).resize($AA.resize);
 
@@ -114,7 +108,6 @@ function create_metatable($table) { // {{{1
     var position = {
       left: $MM.$scroller.scrollLeft(),
       top:  $MM.$scroller.scrollTop() };
-    $MM.$table.css({'left' : -position.left, 'top'  : -position.top});
     $MF.$table.css({'top'  : -position.top});
     $FM.$table.css({'left' : -position.left});
   }); // }}}
@@ -122,14 +115,12 @@ function create_metatable($table) { // {{{1
   $MF.$scroller.scroll(function() { // {{{
     var position = {
       left: $MF.$scroller.scrollLeft() };
-    $MF.$table.css({'left' : -position.left});
     $FF.$table.css({'left' : -position.left});
   }); // }}}
 
   $FM.$scroller.scroll(function() { // {{{
     var position = {
       top: $FM.$scroller.scrollTop() };
-    $FM.$table.css({'top' : -position.top});
     $FF.$table.css({'top' : -position.top});
   }); // }}}
 

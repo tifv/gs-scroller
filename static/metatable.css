@@ -8,7 +8,6 @@
     border-style: solid;
     border-color: #dadfe8;
     border-width: 0px;
-    position: relative; left: 0px; top: 0px;
     overflow: hidden;
   }
   .metacell.frozen-rows {
@@ -25,10 +24,6 @@
   }
 
 /* scroller {{{1 */
-  .metacell > .scroller {
-    position: relative; left: 0px; top: 0px;
-    z-index: 0;
-  }
   .metacell.frozen-rows > .scroller {
     overflow-x: hidden;
   }
@@ -41,13 +36,7 @@
   .metacell.moving-columns > .scroller {
     overflow-y: scroll;
   }
-
-/* pager {{{1 */
-  .metacell > .pager {
-    position: absolute; left: 0px; top: 0px;
-    z-index: -1;
-  }
-  .metacell > .pager > table {
+  .metacell > .scroller > .pager > table {
     position: relative;
   }
 
