@@ -3,11 +3,14 @@ function create_metatable($table) { // {{{1
   $table.$body = $table.children('tbody').first();
 
   function create_metacell() { // {{{
-    var $metacell =  $('<td />').addClass('metacell')
+    var $metacell =  $('<td />')
+      .addClass('metatable__cell')
       .addClass('ritz'); // "ritz" is expected by google CSS
-    $metacell.$scroller = $('<div />').addClass('scroller')
+    $metacell.$scroller = $('<div />')
+      .addClass('metatable__scroller')
       .appendTo($metacell);
-    $metacell.$pager = $('<div />').addClass('pager')
+    $metacell.$pager = $('<div />')
+      .addClass('metatable__pager')
       .appendTo($metacell.$scroller);
     $metacell.$table = $($table[0].cloneNode())
       .appendTo($metacell.$pager);
@@ -17,12 +20,17 @@ function create_metatable($table) { // {{{1
       .appendTo($metacell.$table);
     return $metacell;
   } // }}}
-  var $FF = create_metacell().addClass('frozen-rows frozen-columns');
-  var $FM = create_metacell().addClass('frozen-rows moving-columns');
-  var $MF = create_metacell().addClass('moving-rows frozen-columns');
-  var $MM = create_metacell().addClass('moving-rows moving-columns');
+
+  var
+    $FF = create_metacell(), $FM = create_metacell(),
+    $MF = create_metacell(), $MM = create_metacell();
+  var
+    $FA = $FF.add($FM).addClass('metatable__cell--frozen-rows'),
+    $AF = $FF.add($MF).addClass('metatable__cell--frozen-cols'),
+    $MA = $MF.add($MM).addClass('metatable__cell--moving-rows'),
+    $AM = $FM.add($MM).addClass('metatable__cell--moving-cols');
   var $AA = $('<table />').addClass('metatable')
-    .append( $('<tr />').append($FF, $FM), $('<tr />').append($MF, $MM) );
+    .append( $('<tr />').append($FA), $('<tr />').append($MA) );
 
   { // clone head row {{{
     var $headrow = $table.$head.children('tr').first();
@@ -34,7 +42,7 @@ function create_metatable($table) { // {{{1
       $headers$moving = $header$frozen.nextAll();
     } else {
       $headers$moving = $corner.nextAll();
-      $AA.addClass('no-frozen-columns');
+      $AA.addClass('metatable--no-frozen-columns');
     }
     $headrow$moving.append($headers$moving);
     $header$frozen.remove();
@@ -52,7 +60,7 @@ function create_metatable($table) { // {{{1
       $rows$moving = $row$frozen.nextAll('tr');
     } else {
       $rows$moving = $table.$body.children('tr');
-      $AA.addClass('no-frozen-rows');
+      $AA.addClass('metatable--no-frozen-rows');
     }
     function split_row($row, $Fbody, $Mbody) {
       var $cell$frozen = $row.children('td.freezebar-cell').first();

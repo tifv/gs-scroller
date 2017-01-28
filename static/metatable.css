@@ -1,42 +1,38 @@
-/* metatable {{{1 */
-  .metatable {
-    border: 0px; padding: 0px; margin: 0px;
-    border-collapse: collapse;
-  }
-  .metacell {
-    margin: 0px; padding: 0px;
+.metatable {
+  border: 0; padding: 0; margin: 0;
+  border-collapse: collapse;
+}
+
+  .metatable__cell {
+    margin: 0; padding: 0;
     border-style: solid;
     border-color: #dadfe8;
-    border-width: 0px;
+    border-width: 0;
     overflow: hidden;
   }
-  .metacell.frozen-rows {
-    border-bottom-width: 3px;
-  }
-  .metacell.frozen-columns {
-    border-right-width: 3px;
-  }
-  .no-frozen-rows .metacell.frozen-rows {
-    border-bottom-width: 0px;
-  }
-  .no-frozen-columns .metacell.frozen-columns {
-    border-right-width: 0px;
-  }
 
-/* scroller {{{1 */
-  .metacell.frozen-rows > .scroller {
+    .metatable__cell--frozen-rows { border-bottom-width: 3px; }
+    .metatable__cell--frozen-cols { border-right-width:  3px; }
+
+    .metatable--no-frozen-rows .metatable__cell--frozen-rows
+      { border-bottom-width: 0; }
+    .metatable--no-frozen-cols .metatable__cell--frozen-cols
+      { border-right-width: 0; }
+
+  .metatable__scroller {
     overflow-x: hidden;
-  }
-  .metacell.moving-rows > .scroller {
-    overflow-x: scroll;
-  }
-  .metacell.frozen-columns > .scroller {
     overflow-y: hidden;
   }
-  .metacell.moving-columns > .scroller {
-    overflow-y: scroll;
-  }
-  .metacell > .scroller > .pager > table {
+
+    .metatable__cell--moving-rows > .metatable__scroller {
+      overflow-x: scroll;
+    }
+
+    .metatable__cell--moving-cols > .metatable__scroller {
+      overflow-y: scroll;
+    }
+
+  .metatable__pager > table {
     position: relative;
   }
 
