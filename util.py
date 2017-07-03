@@ -28,7 +28,7 @@ def temporary_cache(timeout):
     """
     Decorator. Implement cacheing of function results.
 
-    Function arguments and return value must always be strings.
+    Function arguments must always be strings.
     Arguments must never contain slash.
     """
     if memcache is None:

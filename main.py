@@ -29,21 +29,23 @@ def sheet(sid, gid):
 
 @app.route('/<base64:sid>/')
 def spreadsheet(sid):
-    sheets = google_spreadsheet_sheets(sid)
+    title, sheets = google_spreadsheet_data(sid)
     if not sheets:
         raise Google404()
-    return render_template('spreadsheet.html', sid=sid, sheets=sheets, links=True)
+    return render_template('spreadsheet.html', title=title, links=True,
+        sid=sid, sheets=sheets, )
 
 @app.route('/<base64:sid>/(<digitlist:gids>)')
 def spreadsheet_selection(sid, gids):
-    sheets = google_spreadsheet_sheets(sid)
+    title, sheets = google_spreadsheet_data(sid)
     gids = set(gids)
     sheets = [ sheet
         for sheet in sheets
         if sheet['gid'] in gids ]
     if not sheets:
         raise Google404()
-    return render_template('spreadsheet.html', sid=sid, sheets=sheets, links=False)
+    return render_template('spreadsheet.html', title=title, links=False,
+        sid=sid, sheets=sheets, )
 
 @temporary_cache(60*5)
 def convert_google_sheet(sid, gid):
@@ -83,11 +85,12 @@ SHEET_PATTERN = re.compile(
         r'gid: "(?P<gid>\d+)"'
     r'[^{}]*}' )
 @temporary_cache(60*5)
-def google_spreadsheet_sheets(sid):
+def google_spreadsheet_data(sid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml?widget=true'
         .format(sid=sid) )
 
+    title = html.find('head/title').text
     sheets = []
     for script in html.iter('script'):
         if script.text is None:
@@ -96,7 +99,7 @@ def google_spreadsheet_sheets(sid):
             sheets.append(match.groupdict())
         if sheets:
             break
-    return sheets
+    return title, sheets
 
 PARSER = lxml.html.HTMLParser(encoding="utf-8")
 def parse_google_document(url, parser=PARSER):
