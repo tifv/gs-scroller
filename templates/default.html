@@ -1,27 +1,108 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
-<html><body>
-  <div>Spreadsheet ID:
-    <input id="sid" />
-  </div>
-  <div>Sheet ID (gid):
-    <input id="gid" />
-  </div>
-  <button onclick="enter()">Confirm</button>
+<html>
+
+<head>
+  <style>
+    code { background: #eeeeee; }
+  </style>
+</head>
+
+<body>
+  <form id="spreadsheet">
+    <p>
+      URL of spreadsheet:
+      <input id="url" name="url"/>
+      <br/>
+      Must start with <code>https://docs.google.com/spreadsheets/d/</code>.
+      <br/>
+      Remove <code>gid=</code> from URL to get view of the whole published
+      spreadsheet instead of a single sheet.
+    </p>
+    or
+    <p>
+      Spreadsheet ID:
+        <input id="sid" name="sid"/>
+      <br/>
+      Sheet ID (gid):
+        <input id="gid" name="gid"/>
+    </p>
+    <button type="submit">Go</button>
+  </form>
+
 <script>
-  function enter() {
-    var sid = document.getElementById('sid').value;
-    var gid = document.getElementById('gid').value;
-    if (sid.indexOf('/') > -1) {
-      alert("Spreadsheet ID cannot contain slashes.");
+  var sid, gid;
+  document.getElementById("spreadsheet").onsubmit = function(event) {
+    event.preventDefault();
+    try {
+      parse_url();
+      if (sid == null) {
+        parse_sid();
+        parse_gid();
+      }
+    } catch (error) {
+      if (error == "abort") {
+        return;
+      } else {
+        throw error;
+      }
+    }
+    if (sid == null) {
+      alert("No input");
       return;
     }
-    if (gid.indexOf('/') > -1) {
-      alert("Sheet ID (gid) cannot contain slashes.");
-      return;
-    }
-    window.location.href = "/" + sid + "/" + gid;
+    if (gid != null)
+      window.location.href = "/" + sid + "/" + gid;
+    else
+      window.location.href = "/" + sid + "/";
   }
+
+  function parse_sid() {
+    sid = null;
+    var sidvalue = document.getElementById('sid').value;
+    if (sidvalue == "") {
+      return;
+    }
+    if (/^[0-9a-zA-Z_\-]+$/.exec(sidvalue) == null) {
+      alert("Spreadsheet ID not accepted: contains unexpected characters.");
+      throw "abort";
+    }
+    sid = sidvalue;
+  }
+
+  function parse_gid() {
+    gid = null;
+    var gidvalue = document.getElementById('gid').value;
+    if (gidvalue == "") {
+      return;
+    }
+    if (/^[0-9]+$/.exec(gidvalue) == null) {
+      alert("Sheet ID not accepted: contains unexpected characters.");
+      throw "aborted";
+    }
+    gid = gidvalue;
+  }
+
+  const url_sid_regex = new RegExp(
+    "^https://docs.google.com/spreadsheets/d/([0-9a-zA-Z_\\-]+)/" );
+  const url_gid_regex = /gid=([0-9]+)/;
+  function parse_url() {
+    var urlvalue = document.getElementById('url').value;
+    if (urlvalue == "")
+      return;
+    var sid_match = url_sid_regex.exec(urlvalue);
+    if (sid_match == null) {
+      alert("Spreadsheet URL not accepted: unknown format.");
+      throw "aborted";
+    }
+    sid = sid_match[1];
+    var gid_match = url_gid_regex.exec(urlvalue);
+    if (gid_match)
+      gid = gid_match[1];
+  }
+
 </script>
+
 </body>
+
 </html>

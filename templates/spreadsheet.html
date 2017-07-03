@@ -4,48 +4,71 @@
 
 <head>
 <style>
-  body, table, thead, tfoot, tr, td, iframe, div, button {
-    margin: 0px; border-width: 0px; padding: 0px;
-    border-spacing: 0px
+  body, iframe, div {
+    margin: 0px; border-width: 0px; padding: 0px; overflow: hidden;
   }
-  #main {
-    width: 100%;
+  html {
+    height: 100%;
   }
-  #main > tbody > tr:not(:first-child) > td {
+  body {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+  #container {
+    flex: 1;
+  }
+  #container > iframe {
+    width: 100%; height: 100%;
+  }
+  #switcher-container {
     border-top-width: 4px;
     border-top-style: ridge;
   }
-  #switcher .tab {
-    display: inline-block;
-    margin: 5px; border-width: 3px; padding: 5px 10px;
+  #switcher {
+    display: inline;
+  }
+  #switcher > .tab {
+    display: inline-block; white-space: nowrap;
+    vertical-align: middle;
+    margin: 5px 5px; border-width: 3px; padding: 5px 10px;
     border-style: outset;
     background: #e9e9e9;
+    font-family: arial, sans-serif;
   }
-  #switcher .tab:not(:first-child) {
-    margin-left: 0px;
-  }
-  #switcher .tab.enabled {
-    border-style: inset;
+  {%- if links %}
+  #switcher > .tab.enabled {
     background: #ffffff;
   }
+  #switcher > .tab.selected {
+    border-style: inset;
+  }
+  #switcher-container > a {
+    margin: 5px 10px;
+  }
+  #switcher-container:not(.selection-active) > #link-selection {
+    display: none;
+  }
+  {%- else %}
+  #switcher > .tab.enabled {
+    background: #ffffff;
+    border-style: inset;
+  }
+  {%- endif %}
 </style>
 </head>
 
 <body>
-
-  <table id="main">
-  <tbody>
-  <tr id="container-row">
-    <td id="container"></td>
-  </tr>
-  <tr id="switcher-row">
-    <td id="switcher"></td>
-  </tr>
-  </tbody>
-  <tfoot>
-  </tfoot>
-  </table>
-
+  <div id="container">
+  </div>
+  <div id="switcher-container">
+    <div id="switcher">
+    </div>
+    {%- if links %}
+    <a id="link-single">open single page</a>
+    <a id="link-selection">open selection</a>
+    {%- endif %}
+  </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
 </script>
 <script>
@@ -63,18 +86,16 @@
       switcher.append( $('<div class="tab"/>')
         .attr('gid', sheet.gid)
         .text(sheet.name)
-        .click(function() { sheet_show($(this).attr('gid')); })
+        .click(function(event) {
+          if (!event.ctrlKey) {
+            sheet_show($(this).attr('gid'));
+          } else {
+            sheet_select($(this).attr('gid'));
+          }
+        })
       );
     }
-    $(window).resize(resize);
-    resize();
     follow_hash();
-  }
-
-  function resize() {
-    $('#container-row').css({
-      height: $(window).height() - $('#switcher-row').height()
-    });
   }
 
   function follow_hash() {
@@ -86,24 +107,45 @@
   }
 
   function sheet_show(gid, dont_update_hash) {
-    $('#switcher > .tab').removeClass('enabled');
-    $('#switcher > .tab[gid="' + gid + '"]').addClass('enabled');
+    var $tab = $('#switcher > .tab[gid="' + gid + '"]');
+    if ($tab.length != 1)
+      return;
+    $('#switcher > .tab').removeClass('enabled selected');
+    $tab.addClass('enabled');
     $('#container > iframe').css({display: 'none'});
     if (!dont_update_hash)
       window.location.hash = gid;
-    var frame = $('#container > iframe#' + gid);
-    if (frame.length < 1) {
+    var $frame = $('#container > iframe#' + gid);
+    var href = '/' + sid + '/' + gid;
+    if ($frame.length < 1) {
       $('#container').append(
-        $('<iframe width="100%" height="100%"/>')
-          .attr({id: gid, src: '/' + sid + '/' + gid })
+        $('<iframe/>')
+          .attr({id: gid, src: href })
       );
     } else {
-      frame.css({display: 'block'});
+      $frame.css({display: 'block'});
     }
+    $('#link-single').attr('href', href);
+    sheet_select(gid);
   }
 
+  {% if links -%}
+  function sheet_select(gid) {
+    $('#switcher > .tab[gid="' + gid + '"]').toggleClass('selected');
+    var $selected_tabs = $('#switcher > .tab.selected');
+    if ($selected_tabs.length <= 1) {
+      $('#switcher-container').removeClass('selection-active');
+      return;
+    }
+    $('#switcher-container').addClass('selection-active');
+    var selected_gids = [];
+    $selected_tabs.each(function() { selected_gids.push($(this).attr('gid')); });
+    $('#link-selection').attr('href', '/' + sid + '/(' + selected_gids.join(',') + ')')
+  }
+  {%- else -%}
+  function sheet_select(gid) {}
+  {%- endif %}
 </script>
-
 </body>
 
 </html>

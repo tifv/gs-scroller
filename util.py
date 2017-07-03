@@ -17,6 +17,13 @@ class Base64Converter(werkzeug.routing.BaseConverter):
 class DigitsConverter(werkzeug.routing.BaseConverter):
     regex = '[0-9]+'
 
+class DigitListConverter(werkzeug.routing.BaseConverter):
+    regex = '[0-9]+(,[0-9]+)*'
+    def to_python(self, value):
+        return value.split(',')
+    def to_url(self, value):
+        return ','.join(value)
+
 def temporary_cache(timeout):
     """
     Decorator. Implement cacheing of function results.

@@ -8,7 +8,7 @@ import lxml.html
 
 from flask import Flask, url_for, abort, render_template
 
-from util import ( Base64Converter, DigitsConverter,
+from util import ( Base64Converter, DigitsConverter, DigitListConverter,
     temporary_cache )
 
 app = Flask(__name__)
@@ -16,6 +16,7 @@ app = Flask(__name__)
 
 app.url_map.converters['base64'] = Base64Converter
 app.url_map.converters['digits'] = DigitsConverter
+app.url_map.converters['digitlist'] = DigitListConverter
 
 
 @app.route('/')
@@ -29,7 +30,20 @@ def sheet(sid, gid):
 @app.route('/<base64:sid>/')
 def spreadsheet(sid):
     sheets = google_spreadsheet_sheets(sid)
-    return render_template('spreadsheet.html', sid=sid, sheets=sheets)
+    if not sheets:
+        raise Google404()
+    return render_template('spreadsheet.html', sid=sid, sheets=sheets, links=True)
+
+@app.route('/<base64:sid>/(<digitlist:gids>)')
+def spreadsheet_selection(sid, gids):
+    sheets = google_spreadsheet_sheets(sid)
+    gids = set(gids)
+    sheets = [ sheet
+        for sheet in sheets
+        if sheet['gid'] in gids ]
+    if not sheets:
+        raise Google404()
+    return render_template('spreadsheet.html', sid=sid, sheets=sheets, links=False)
 
 @temporary_cache(60*5)
 def convert_google_sheet(sid, gid):
@@ -87,13 +101,17 @@ def google_spreadsheet_sheets(sid):
 PARSER = lxml.html.HTMLParser(encoding="utf-8")
 def parse_google_document(url, parser=PARSER):
     try:
-        html_string = urlopen(url).read()
+        reply = urlopen(url)
     except HTTPError as error:
         if error.code == 404 or error.code == 400:
             raise Google404(url)
         raise
     except HTTPException:
         raise GoogleNotResponding(url)
+    if url != reply.geturl():
+        print(url, reply.geturl())
+        raise Google404(url)
+    html_string = reply.read()
     return lxml.html.fromstring(html_string, parser=parser)
 
 class Google404(Exception):
@@ -115,5 +133,5 @@ def sheet_not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)
 
