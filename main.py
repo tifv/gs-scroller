@@ -1,6 +1,6 @@
 from __future__ import division, unicode_literals
 
-from urllib2 import urlopen, HTTPError
+from urllib2 import urlopen, HTTPError, URLError
 from httplib import HTTPException
 import re
 
@@ -13,6 +13,10 @@ from util import ( Base64Converter, DigitsConverter, DigitListConverter,
 
 app = Flask(__name__)
 
+try:
+    from google.appengine.api.urlfetch_errors import DownloadError
+except ImportError:
+    DownloadError = None
 
 app.url_map.converters['base64'] = Base64Converter
 app.url_map.converters['digits'] = DigitsConverter
@@ -109,10 +113,9 @@ def parse_google_document(url, parser=PARSER):
         if error.code == 404 or error.code == 400:
             raise Google404(url)
         raise
-    except HTTPException:
+    except (HTTPException, URLError, DownloadError):
         raise GoogleNotResponding(url)
     if url != reply.geturl():
-        print(url, reply.geturl())
         raise Google404(url)
     html_string = reply.read()
     return lxml.html.fromstring(html_string, parser=parser)
