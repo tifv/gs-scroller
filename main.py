@@ -2,14 +2,13 @@ from __future__ import division, unicode_literals
 
 import re
 
-import requests
-
 import lxml.html
 
 from flask import Flask, url_for, abort, render_template
 
 from util import ( Base64Converter, DigitsConverter, DigitListConverter,
     temporary_cache )
+import urlread
 
 GOOGLE_TIMEOUT=30
 
@@ -32,19 +31,23 @@ def sheet(sid, gid):
 def spreadsheet(sid):
     title, sheets = google_spreadsheet_data(sid)
     if not sheets:
-        raise Google404()
+        raise GoogleSpreadsheetNotFound()
     return render_template('spreadsheet.html', title=title, links=True,
         sid=sid, sheets=sheets, )
 
 @app.route('/<base64:sid>/(<digitlist:gids>)')
 def spreadsheet_selection(sid, gids):
-    title, sheets = google_spreadsheet_data(sid)
+    try:
+        title, sheets = google_spreadsheet_data(sid)
+    except GoogleSpreadsheetNotResponding as error:
+        error.sid = error.gid = None
+        raise
     gids = set(gids)
     sheets = [ sheet
         for sheet in sheets
         if sheet['gid'] in gids ]
     if not sheets:
-        raise Google404()
+        raise GoogleSpreadsheetNotFound()
     return render_template('spreadsheet.html', title=title, links=False,
         sid=sid, sheets=sheets, )
 
@@ -53,7 +56,7 @@ def convert_google_sheet(sid, gid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml/sheet?gid={gid}'
             .format(sid=sid, gid=gid),
-        sid=sid, gid=gid )
+        errhelp={'sid' : sid, 'gid' : gid} )
     for script in html.iter('script'):
         script.getparent().remove(script)
     html.find('head/link').rewrite_links(
@@ -91,7 +94,7 @@ def google_spreadsheet_data(sid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml?widget=true'
             .format(sid=sid),
-        sid=sid )
+        errhelp={'sid' : sid} )
 
     title = html.find('head/title').text
     sheets = []
@@ -105,30 +108,35 @@ def google_spreadsheet_data(sid):
     return title, sheets
 
 PARSER = lxml.html.HTMLParser(encoding="utf-8")
-def parse_google_document(url, sid=None, gid=None, parser=PARSER):
+def parse_google_document(url, errhelp=None, parser=PARSER):
     try:
-        reply = requests.get(url, allow_redirects=False, timeout=GOOGLE_TIMEOUT)
-    except requests.Timeout:
-        raise GoogleNotResponding(sid=sid, gid=gid)
-    if reply.status_code > 200:
-        raise Google404(url)
-    return lxml.html.fromstring(reply.text, parser=parser)
+        reply_text = urlread.urlread(url, timeout=GOOGLE_TIMEOUT)
+    except urlread.NotFound:
+        raise GoogleSpreadsheetNotFound(errhelp)
+    except urlread.NotResponding:
+        raise GoogleSpreadsheetNotResponding(errhelp)
+    return lxml.html.fromstring(reply_text, parser=parser)
 
-class Google404(Exception):
+class GoogleSpreadsheetException(Exception):
+    def __init__(self, errhelp=None):
+        super(GoogleSpreadsheetException, self).__init__(self)
+        if errhelp is not None:
+            self.sid = errhelp.get('sid')
+            self.gid = errhelp.get('gid')
+        else:
+            self.sid = self.gid = None
+
+class GoogleSpreadsheetNotFound(GoogleSpreadsheetException):
     pass
 
-class GoogleNotResponding(Exception):
-    __slots__ = ['sid', 'gid']
-    def __init__(self, sid=None, gid=None):
-        super(GoogleNotResponding, self).__init__(self)
-        self.sid = sid
-        self.gid = gid
+class GoogleSpreadsheetNotResponding(GoogleSpreadsheetException):
+    pass
 
-@app.errorhandler(Google404)
+@app.errorhandler(GoogleSpreadsheetNotFound)
 def sheet_not_found(exception):
     return render_template('google-404.html'), 404
 
-@app.errorhandler(GoogleNotResponding)
+@app.errorhandler(GoogleSpreadsheetNotResponding)
 def sheet_timeout(exception):
     return render_template('google-504.html', sid=exception.sid, gid=exception.gid), 504
 
@@ -137,5 +145,5 @@ def not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)
 
