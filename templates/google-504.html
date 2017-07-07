@@ -3,7 +3,7 @@
 <html><body>
   <h1>504 Gateway Timeout</h1>
   <p>Google servers did not respond timely and properly. This happens sometimes.</p>
-  <p style="font-size: large;">Try <a href="{{ request.path }}">reloading</a>{% if sid %},
+  <p style="font-size: large;">Try <a href="javascript:window.location.reload(true)">reloading</a>{% if sid %},
   or loading {% if gid %}sheet{% else %}spreadsheet{% endif %} as it is
   <a href="https://docs.google.com/spreadsheets/d/{{ sid }}/pubhtml
       {%- if not gid -%}
