@@ -1,8 +1,8 @@
 from __future__ import division, unicode_literals
 
-from urllib2 import urlopen, HTTPError, URLError
-from httplib import HTTPException
 import re
+
+import requests
 
 import lxml.html
 
@@ -11,12 +11,9 @@ from flask import Flask, url_for, abort, render_template
 from util import ( Base64Converter, DigitsConverter, DigitListConverter,
     temporary_cache )
 
-app = Flask(__name__)
+GOOGLE_TIMEOUT=30
 
-try:
-    from google.appengine.api.urlfetch_errors import DownloadError
-except ImportError:
-    DownloadError = None
+app = Flask(__name__)
 
 app.url_map.converters['base64'] = Base64Converter
 app.url_map.converters['digits'] = DigitsConverter
@@ -55,7 +52,8 @@ def spreadsheet_selection(sid, gids):
 def convert_google_sheet(sid, gid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml/sheet?gid={gid}'
-        .format(sid=sid, gid=gid) )
+            .format(sid=sid, gid=gid),
+        sid=sid, gid=gid )
     for script in html.iter('script'):
         script.getparent().remove(script)
     html.find('head/link').rewrite_links(
@@ -92,7 +90,8 @@ SHEET_PATTERN = re.compile(
 def google_spreadsheet_data(sid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml?widget=true'
-        .format(sid=sid) )
+            .format(sid=sid),
+        sid=sid )
 
     title = html.find('head/title').text
     sheets = []
@@ -106,25 +105,24 @@ def google_spreadsheet_data(sid):
     return title, sheets
 
 PARSER = lxml.html.HTMLParser(encoding="utf-8")
-def parse_google_document(url, parser=PARSER):
+def parse_google_document(url, sid=None, gid=None, parser=PARSER):
     try:
-        reply = urlopen(url)
-    except HTTPError as error:
-        if error.code == 404 or error.code == 400:
-            raise Google404(url)
-        raise
-    except (HTTPException, URLError, DownloadError):
-        raise GoogleNotResponding(url)
-    if url != reply.geturl():
+        reply = requests.get(url, allow_redirects=False, timeout=GOOGLE_TIMEOUT)
+    except requests.Timeout:
+        raise GoogleNotResponding(sid=sid, gid=gid)
+    if reply.status_code > 200:
         raise Google404(url)
-    html_string = reply.read()
-    return lxml.html.fromstring(html_string, parser=parser)
+    return lxml.html.fromstring(reply.text, parser=parser)
 
 class Google404(Exception):
     pass
 
 class GoogleNotResponding(Exception):
-    pass
+    __slots__ = ['sid', 'gid']
+    def __init__(self, sid=None, gid=None):
+        super(GoogleNotResponding, self).__init__(self)
+        self.sid = sid
+        self.gid = gid
 
 @app.errorhandler(Google404)
 def sheet_not_found(exception):
@@ -132,12 +130,12 @@ def sheet_not_found(exception):
 
 @app.errorhandler(GoogleNotResponding)
 def sheet_timeout(exception):
-    return render_template('google-504.html'), 504
+    return render_template('google-504.html', sid=exception.sid, gid=exception.gid), 504
 
 @app.errorhandler(404)
-def sheet_not_found(exception):
+def not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    app.run(host='0.0.0.0', port=8080, debug=True)
 
