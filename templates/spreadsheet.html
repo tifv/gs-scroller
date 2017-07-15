@@ -1,3 +1,4 @@
+{# vim: set filetype=jinja shiftwidth=2 : -#}
 <!DOCTYPE html>
 <meta charset="UTF-8">
 <html>
@@ -89,39 +90,39 @@
         .text(sheet.name)
         .click(function(event) {
           if (!event.ctrlKey) {
-            sheet_show($(this).attr('gid'));
+            window.location.hash = $(this).attr('gid');
           } else {
             sheet_select($(this).attr('gid'));
           }
         })
       );
     }
-    follow_hash();
+    window.addEventListener("hashchange", sheet_show);
+    sheet_show(true);
   }
 
-  function follow_hash() {
+  function sheet_show(update_hash) {
+    var $tab, gid;
     if (/^#\d+$/.test(window.location.hash)) {
-      sheet_show(window.location.hash.substring(1), true);
+      gid = window.location.hash.substring(1);
+      $tab = $('#switcher > .tab[gid="' + gid + '"]');
+      if ($tab.length != 1)
+        return;
     } else {
-      sheet_show($('#switcher > .tab').first().attr('gid'));
+      $tab = $('#switcher > .tab').first();
+      gid = $tab.attr('gid');
     }
-  }
-
-  function sheet_show(gid, dont_update_hash) {
-    var $tab = $('#switcher > .tab[gid="' + gid + '"]');
-    if ($tab.length != 1)
-      return;
     $('#switcher > .tab').removeClass('enabled selected');
     $tab.addClass('enabled');
     $('#container > iframe').css({display: 'none'});
-    if (!dont_update_hash)
-      window.location.hash = gid;
-    var $frame = $('#container > iframe#' + gid);
+    if (update_hash && (window.location.hash != '#' + gid))
+      window.location.hash = '#' + gid;
+    var $frame = $('#container > iframe[gid="' + gid + '"]');
     var href = '/' + sid + '/' + gid;
     if ($frame.length < 1) {
       $('#container').append(
         $('<iframe/>')
-          .attr({id: gid, src: href })
+          .attr({gid: gid, src: href })
       );
     } else {
       $frame.css({display: 'block'});
