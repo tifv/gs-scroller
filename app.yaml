@@ -5,6 +5,9 @@ threadsafe: yes
 handlers:
 - url: /static
   static_dir: static
+- url: /(robots\.txt)$
+  static_files: misc/\1
+  upload: misc/robots\.txt$
 - url: .*
   script: main.app
 
