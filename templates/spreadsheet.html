@@ -135,7 +135,7 @@
   function sheet_select(gid) {
     $('#switcher > .tab[gid="' + gid + '"]').toggleClass('selected');
     var $selected_tabs = $('#switcher > .tab.selected');
-    if ($selected_tabs.length <= 1) {
+    if ($selected_tabs.length <= 0) {
       $('#switcher-container').removeClass('selection-active');
       return;
     }

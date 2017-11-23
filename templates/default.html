@@ -54,32 +54,39 @@
       alert("No input");
       return;
     }
-    if (gid != null)
+    if (gid != null) {
       window.location.href = "/" + sid + "/" + gid;
-    else
+    } else {
       window.location.href = "/" + sid + "/";
+    }
   }
 
+  const sid_regex = new RegExp(
+    "^(e/)?[0-9a-zA-Z_\\-]+$" );
   function parse_sid() {
     sid = null;
     var sidvalue = document.getElementById('sid').value;
     if (sidvalue == "") {
       return;
     }
-    if (/^[0-9a-zA-Z_\-]+$/.exec(sidvalue) == null) {
+    var sid_match = sid_regex.exec(sidvalue);
+    if (sid_match == null) {
       alert("Spreadsheet ID not accepted: contains unexpected characters.");
       throw "abort";
     }
     sid = sidvalue;
   }
 
+  const gid_regex = new RegExp(
+    "^[0-9]+$" );
   function parse_gid() {
     gid = null;
     var gidvalue = document.getElementById('gid').value;
     if (gidvalue == "") {
       return;
     }
-    if (/^[0-9]+$/.exec(gidvalue) == null) {
+    var gid_match = gid_regex.exec(gidvalue);
+    if (gid_match == null) {
       alert("Sheet ID not accepted: contains unexpected characters.");
       throw "aborted";
     }
@@ -87,7 +94,7 @@
   }
 
   const url_sid_regex = new RegExp(
-    "^https://docs.google.com/spreadsheets/d/([0-9a-zA-Z_\\-]+)/" );
+    "^https://docs.google.com/spreadsheets/d/((e/)?[0-9a-zA-Z_\\-]+)/" );
   const url_gid_regex = /gid=([0-9]+)/;
   function parse_url() {
     var urlvalue = document.getElementById('url').value;
@@ -100,7 +107,7 @@
     }
     sid = sid_match[1];
     var gid_match = url_gid_regex.exec(urlvalue);
-    if (gid_match)
+    if (gid_match != null)
       gid = gid_match[1];
   }
 

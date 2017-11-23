@@ -23,9 +23,17 @@ app.url_map.converters['digitlist'] = DigitListConverter
 def default():
     return render_template('default.html')
 
+@app.route('/e/<base64:sid>/<digits:gid>')
+def sheet_e(sid, gid):
+    return sheet(sid="e/"+sid, gid=gid)
+
 @app.route('/<base64:sid>/<digits:gid>')
 def sheet(sid, gid):
     return convert_google_sheet(sid, gid)
+
+@app.route('/e/<base64:sid>/')
+def spreadsheet_e(sid):
+    return spreadsheet(sid="e/"+sid)
 
 @app.route('/<base64:sid>/')
 def spreadsheet(sid):
@@ -34,6 +42,10 @@ def spreadsheet(sid):
         raise GoogleSpreadsheetNotFound()
     return render_template('spreadsheet.html', title=title, links=True,
         sid=sid, sheets=sheets, )
+
+@app.route('/e/<base64:sid>/(<digitlist:gids>)')
+def spreadsheet_selection_e(sid, gids):
+    return spreadsheet_selection(sid="e/"+sid, gids=gids)
 
 @app.route('/<base64:sid>/(<digitlist:gids>)')
 def spreadsheet_selection(sid, gids):
