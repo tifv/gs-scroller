@@ -71,13 +71,17 @@ def convert_google_sheet(sid, gid):
         errhelp={'sid' : sid, 'gid' : gid} )
     for script in html.iter('script'):
         script.getparent().remove(script)
-    html.find('head/link').rewrite_links(
-        lambda s: 'https://docs.google.com' + s )
+    for link in html.find('head').iter('link'):
+        link.rewrite_links(
+            lambda s:
+                'https:' + s
+                    if s.startswith('//') else
+                'https://docs.google.com' + s )
     html.find('head').append(lxml.html.Element( 'link',
         rel='stylesheet', href=url_for('static', filename='metatable.css'),
     ))
     html.find('body').append(lxml.html.Element( 'script',
-        src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"
+        src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
     ))
     html.find('body').append(lxml.html.Element( 'script',
         src=url_for('static', filename='metatable.js')
