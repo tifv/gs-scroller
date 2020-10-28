@@ -7,7 +7,7 @@ and target project is already selected, this should deploy the app to the projec
 
     $ git clone https://github.com/tifv/gs-scroller.git
     $ cd gs-scroller
-    $ pip install -r requirements.txt -t lib/
+    $ python3 -m pip install -r requirements.txt -t lib/
     $ gcloud app deploy
 
 (Of course, you can do the same from your computer if you have necessary tools.)
