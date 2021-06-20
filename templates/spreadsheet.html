@@ -4,6 +4,8 @@
 <html>
 
 <head>
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <title>{{ title }}</title>
 <style>
   body, iframe, div {
@@ -24,37 +26,71 @@
     width: 100%; height: 100%;
   }
   #switcher-container {
-    border-top-width: 4px;
-    border-top-style: ridge;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #f1f3f4
   }
   #switcher {
+    flex-grow: 0;
     display: inline;
   }
   #switcher > .tab {
-    display: inline-block; white-space: nowrap;
-    vertical-align: middle;
-    margin: 5px 5px; border-width: 3px; padding: 5px 10px;
-    border-style: outset;
-    background: #e9e9e9;
+    display: inline-flex;
+    flex-direction: row;
+    white-space: nowrap;
     font-family: arial, sans-serif;
+    color: #80868b;
+    font-size: 14px;
+    font-weight: bold;
+    align-items: center;
+    background-color: #f1f3f4;
+    border-bottom: none;
+    border-left: 1px solid #e8eaed;
+    border-right: 1px solid #e8eaed;
+    border-top: 1px solid #e8eaed;
+    border-radius: 0;
+    height: 39px;
+    margin-right: -1px;
+    padding: 0 16px 0 16px;
+  }
+  #switcher > .tab:hover {
+    background-color: #e8eaed;
+    border-top-color: #e8eaed;
   }
   {%- if links %}
   #switcher > .tab.enabled {
-    background: #ffffff;
+    background-color: #ffffff;
   }
   #switcher > .tab.selected {
-    border-style: inset;
-  }
-  #switcher-container > a {
-    margin: 5px 10px;
-  }
-  #switcher-container:not(.selection-active) > #link-selection {
-    display: none;
+    color: #188038;
   }
   {%- else %}
   #switcher > .tab.enabled {
-    background: #ffffff;
-    border-style: inset;
+    background-color: #ffffff;
+    color: #188038;
+  }
+  {%- endif %}
+  {%- if links %}
+  #linker {
+    flex-shrink: 0;
+    flex-basis: 120px;
+    flex-grow: 1;
+    display: inline;
+    align-items: center;
+    text-align: end;
+  }
+  #linker > a {
+    margin: 5px 10px;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+  #linker:not(.selection-active) > #link-selection {
+    display: none;
+  }
+  .link-open::after {
+    font-family: 'Material Icons';
+    content: "open_in_new";
   }
   {%- endif %}
 </style>
@@ -67,8 +103,10 @@
     <div id="switcher">
     </div>
     {%- if links %}
-    <a id="link-single">open single page</a>
-    <a id="link-selection">open selection</a>
+    <div id="linker">
+      <a id="link-single" class="link-open" target="_blank">single page</a>
+      <a id="link-selection" class="link-open" target="_blank">selection</a>
+    </div>
     {%- endif %}
   </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
@@ -136,10 +174,10 @@
     $('#switcher > .tab[gid="' + gid + '"]').toggleClass('selected');
     var $selected_tabs = $('#switcher > .tab.selected');
     if ($selected_tabs.length <= 0) {
-      $('#switcher-container').removeClass('selection-active');
+      $('#linker').removeClass('selection-active');
       return;
     }
-    $('#switcher-container').addClass('selection-active');
+    $('#linker').addClass('selection-active');
     var selected_gids = [];
     $selected_tabs.each(function() { selected_gids.push($(this).attr('gid')); });
     $('#link-selection').attr('href', '/' + sid + '/(' + selected_gids.join(',') + ')')
