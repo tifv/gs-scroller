@@ -4,4 +4,16 @@
   <h1>404 Not Found</h1>
   <p>This spreadsheet or sheet does not exist or is not published
     on Google Spreadsheets.</p>
+  {% if sid %}
+  <p>To see the original error, try
+  loading {% if gid %}sheet{% else %}spreadsheet{% endif %} as it is
+  <a href="https://docs.google.com/spreadsheets/d/{{ sid }}/pubhtml
+      {%- if not gid -%}
+        ?widget=true
+      {%- else -%}
+        /sheet?gid={{ gid }}
+      {%- endif -%}
+    ">published on Google Spreadsheets</a>.
+  </p>
+  {%- endif %}
 </body></html>

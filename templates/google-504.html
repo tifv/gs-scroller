@@ -3,14 +3,18 @@
 <html><body>
   <h1>504 Gateway Timeout</h1>
   <p>Google servers did not respond timely and properly. This happens sometimes.</p>
-  <p style="font-size: large;">Try <a href="javascript:window.location.reload(true)">reloading</a>{% if sid %},
-  or loading {% if gid %}sheet{% else %}spreadsheet{% endif %} as it is
+  <p style="font-size: large;">Try
+    <a href="javascript:window.location.reload(true)">reloading</a>.</p>
+  {% if sid %}
+  <p>You can also try
+  loading {% if gid %}sheet{% else %}spreadsheet{% endif %} as it is
   <a href="https://docs.google.com/spreadsheets/d/{{ sid }}/pubhtml
       {%- if not gid -%}
         ?widget=true
       {%- else -%}
         /sheet?gid={{ gid }}
       {%- endif -%}
-    ">published by Google</a>
-  {%- endif %}.</p>
+    ">published on Google Spreadsheets</a>.
+  </p>
+  {%- endif %}
 </body></html>

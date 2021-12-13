@@ -155,7 +155,7 @@ class GoogleSpreadsheetNotResponding(GoogleSpreadsheetException):
 
 @app.errorhandler(GoogleSpreadsheetNotFound)
 def sheet_not_found(exception):
-    return render_template('google-404.html'), 404
+    return render_template('google-404.html', sid=exception.sid, gid=exception.gid), 404
 
 @app.errorhandler(GoogleSpreadsheetNotResponding)
 def sheet_timeout(exception):
