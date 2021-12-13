@@ -132,6 +132,30 @@ function create_metatable($table) { // {{{1
     $FF.$table.css({'top' : -position.top});
   }); // }}}
 
+  function reconcile_rows($row1, $row2) {
+    var height = Math.max($row1.height(), $row2.height());
+    console.log("wow", height);
+    $row1.css('height', height + "px");
+    $row2.css('height', height + "px");
+  }
+  window.requestAnimationFrame(function() {
+  window.requestAnimationFrame(function() {
+    console.log("yeah");
+    FFrows = $FF.$table.children('tbody').children().get();
+    FMrows = $FM.$table.children('tbody').children().get();
+    for (let i = 0; i < FFrows.length; ++i) {
+      reconcile_rows($(FFrows[i]), $(FMrows[i]));
+    }
+    console.log("oh");
+    MFrows = $MF.$table.children('tbody').children();
+    MMrows = $MM.$table.children('tbody').children();
+    console.log(MFrows);
+    for (let i = 0; i < MFrows.length; ++i) {
+      reconcile_rows($(MFrows[i]), $(MMrows[i]));
+    }
+    $AA.resize();
+  })});
+
   return $AA;
 
 }
