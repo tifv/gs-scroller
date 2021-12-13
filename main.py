@@ -81,7 +81,7 @@ def convert_google_sheet(sid, gid):
         rel='stylesheet', href=url_for('static', filename='metatable.css'),
     ))
     html.find('body').append(lxml.html.Element( 'script',
-        src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+        src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
     ))
     html.find('body').append(lxml.html.Element( 'script',
         src=url_for('static', filename='metatable.js')
