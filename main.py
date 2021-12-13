@@ -90,9 +90,14 @@ def convert_google_sheet(sid, gid):
     script.text = ( "$(init); "
         "function init() { "
             "$('body').css('overflow', 'hidden'); "
-            "var $table = $('#sheets-viewport table').detach(); "
+            "var $viewport = $('#sheets-viewport').detach(); "
+            "var $table = $viewport.find('table').detach(); "
+            "var $svgs = $viewport.find('svg'); "
             "var $metatable = create_metatable($table); "
-            "$('body').empty().append($metatable); "
+            "$('body').empty(); "
+            "$('body').append($svgs); "
+            "$('body').append($metatable); "
+            "$viewport.remove(); "
             "$metatable.resize(); "
         " }" )
     html.find('body').append(script)
