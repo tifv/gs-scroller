@@ -9,7 +9,7 @@ logger = logging.getLogger("gs-scroller.cache")
 # try:
 #     from google.appengine.api import memcache
 # except ImportError:
-#     logger.warning("Google's memcache module could not be imported", exc_info=True)
+#     logger.warning("Google's memcache module could not be imported")
 #     memcache = None
 # else:
 #     logger.info("Google's memcache module was imported")

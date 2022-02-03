@@ -13,7 +13,7 @@ try:
     from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
     logging_handler = CloudLoggingHandler(logging_client)
 except ImportError:
-    logger.warning("Google's logging module could not be imported", exc_info=True)
+    logger.warning("Google's logging module could not be imported")
 else:
     logging.getLogger("gs-scroller").setLevel(logging.INFO)
     setup_logging(logging_handler)
@@ -23,7 +23,7 @@ else:
 try:
     from google.appengine.api import wrap_wsgi_app
 except ImportError:
-    logger.warning("Google's appengine wrapper could not be imported", exc_info=True)
+    logger.warning("Google's appengine wrapper could not be imported")
     wrap_wsgi_app = None
 else:
     logger.info("Google's appengine wrapper was imported")
