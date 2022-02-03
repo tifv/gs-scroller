@@ -1,18 +1,43 @@
-from __future__ import division, unicode_literals
-
 import re
 
 import lxml.html
 
 from flask import Flask, url_for, abort, render_template
 
-from util import ( Base64Converter, DigitsConverter, DigitListConverter,
-    temporary_cache )
+import logging
+logger = logging.getLogger("gs-scroller.main")
+
+try:
+    import google.cloud.logging
+    logging_client = google.cloud.logging.Client()
+    from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
+    logging_handler = CloudLoggingHandler(logging_client)
+except ImportError:
+    logger.warning("Google's logging module could not be imported", exc_info=True)
+else:
+    logging.getLogger("gs-scroller").setLevel(logging.INFO)
+    setup_logging(logging_handler)
+    logger.info("Google's logging module was imported")
+    logger.debug("Debug messages will be logged")
+
+try:
+    from google.appengine.api import wrap_wsgi_app
+except ImportError:
+    logger.warning("Google's appengine wrapper could not be imported", exc_info=True)
+    wrap_wsgi_app = None
+else:
+    logger.info("Google's appengine wrapper was imported")
+
+from converters import (
+    Base64Converter, DigitsConverter, DigitListConverter )
+from cache import temporary_cache
 import urlread
 
 GOOGLE_TIMEOUT=30
 
 app = Flask(__name__)
+if wrap_wsgi_app is not None:
+    app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 app.url_map.converters['base64'] = Base64Converter
 app.url_map.converters['digits'] = DigitsConverter
@@ -166,5 +191,6 @@ def not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
+    logging.getLogger("gs-scroller").setLevel(logging.INFO)
     app.run(host='0.0.0.0', port=8080, debug=False)
 

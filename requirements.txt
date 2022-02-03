@@ -1,2 +1,4 @@
 lxml
 Flask
+google-cloud-logging
+#appengine-python-standard
