@@ -17,10 +17,11 @@ memcache = None
 
 class TemporaryCache(dict):
 
-    def __init__(self, timeout, *, maxlen=None):
+    def __init__(self, timeout, *, max_len=None):
         self.timeout = timeout
         self.cached_times = dict()
-        self.time_queue = deque(maxlen=maxlen)
+        self.time_queue = deque()
+        self.max_len = max_len
 
     def get_cached_value(self, key, generator):
         current_time = time.time()
@@ -36,30 +37,38 @@ class TemporaryCache(dict):
                 del self.cached_times[key]
             except IndexError:
                 pass
-        self.cleanup_cached_values(old_limit_time)
+        self.cleanup_old_cache(old_limit_time)
         return self.set_cached_value(key, current_time, generator())
 
-    def cleanup_cached_values(self, old_limit_time):
+    def cleanup_old_cache(self, old_limit_time):
         while True:
-            try:
-                (old_key, old_cached_time) = self.time_queue.pop()
-            except IndexError:
+            if not self.evict_oldest_cache(old_limit_time):
                 break
-            if old_cached_time > old_limit_time:
-                self.time_queue.append((old_key, old_cached_time))
-                break
+
+    def evict_oldest_cache(self, old_limit_time=None):
+        try:
+            (old_key, old_cached_time) = self.time_queue.pop()
+        except IndexError:
+            return False
+        if old_limit_time is not None and old_cached_time > old_limit_time:
+            self.time_queue.append((old_key, old_cached_time))
+            return False
+        try:
+            del self[old_key, old_cached_time]
+        except IndexError:
+            pass
+        cached_time = self.cached_times.get(old_key)
+        if cached_time is old_cached_time:
             try:
-                del self[old_key, old_cached_time]
+                del self.cached_times[old_key]
             except IndexError:
                 pass
-            cached_time = self.cached_times.get(old_key)
-            if cached_time is old_cached_time:
-                try:
-                    del self.cached_times[old_key]
-                except IndexError:
-                    pass
+        return True
 
     def set_cached_value(self, key, current_time, value):
+        while len(self.time_queue) >= self.max_len:
+            if not self.evict_oldest_cache():
+                break
         logger.debug("cacheing value")
         self[key, current_time] = (value,)
         self.cached_times[key] = current_time
@@ -91,7 +100,7 @@ def temporary_cache(timeout):
     Function arguments must always be strings, and never contain slash.
     """
     if memcache is None:
-        cache = TemporaryCache(timeout, maxlen=100)
+        cache = TemporaryCache(timeout, max_len=100)
     else:
         cache = MemcacheCache(timeout)
     def wrapper(function, timeout=timeout, cache=cache):
