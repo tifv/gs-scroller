@@ -36,13 +36,13 @@ class MemcacheCache:
     def __init__(self, timeout):
         self.timeout = timeout
     def get_cached_value(self, key, generator):
-        logger.debug("getting memcache key")
+        logger.debug("getting memcache value")
         cached_result = memcache.get(key)
         if cached_result is not None:
             return cached_result
         result = generator()
         try:
-            logger.debug("setting memcache key")
+            logger.debug("setting memcache value")
             memcache.add(key, result, self.timeout)
         except ValueError:
             logger.info("error while setting memcache key", exc_info=True)

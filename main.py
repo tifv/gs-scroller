@@ -7,18 +7,21 @@ from flask import Flask, url_for, abort, render_template
 import logging
 logger = logging.getLogger("gs-scroller.main")
 
-try:
-    import google.cloud.logging
-    logging_client = google.cloud.logging.Client()
-    from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
-    logging_handler = CloudLoggingHandler(logging_client)
-except ImportError:
-    logger.warning("Google's logging module could not be imported")
+if __name__ == '__main__':
+    logging.getLogger("gs-scroller").setLevel(logging.INFO)
 else:
     logging.getLogger("gs-scroller").setLevel(logging.INFO)
-    setup_logging(logging_handler)
-    logger.info("Google's logging module was imported")
-    logger.debug("Debug messages will be logged")
+    try:
+        import google.cloud.logging
+        logging_client = google.cloud.logging.Client()
+        from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
+        logging_handler = CloudLoggingHandler(logging_client)
+    except ImportError:
+        logger.warning("Google's logging module could not be imported")
+    else:
+        setup_logging(logging_handler)
+        logger.info("Google's logging module was imported")
+        logger.debug("Debug messages will be logged")
 
 try:
     from google.appengine.api import wrap_wsgi_app
@@ -191,6 +194,5 @@ def not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    logging.getLogger("gs-scroller").setLevel(logging.INFO)
     app.run(host='0.0.0.0', port=8080, debug=False)
 
