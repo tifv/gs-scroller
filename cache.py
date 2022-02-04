@@ -16,21 +16,56 @@ logger = logging.getLogger("gs-scroller.cache")
 memcache = None
 
 class TemporaryCache(dict):
+
     def __init__(self, timeout, *, maxlen=None):
         self.timeout = timeout
+        self.cached_times = dict()
         self.time_queue = deque(maxlen=maxlen)
+
     def get_cached_value(self, key, generator):
         current_time = time.time()
-        cache_limit_time = current_time - self.timeout
-        cached_result, cached_time = self.get(key, (None, 0))
-        if cached_time >= cache_limit_time:
-            return cached_result
-        while self.time_queue and self.time_queue[-1][1] < cache_limit_time:
-            del self[self.time_queue.pop()[0]]
-        result = generator()
-        self[key] = result, current_time
+        old_limit_time = current_time - self.timeout
+        cached_time = self.cached_times.get(key)
+        if cached_time is not None:
+            if cached_time >= old_limit_time:
+                cached_result = self.get((key, cached_time), None)
+                if cached_result is not None:
+                    logger.debug("using cached value")
+                    return cached_result[0]
+            try:
+                del self.cached_times[key]
+            except IndexError:
+                pass
+        self.cleanup_cached_values(old_limit_time)
+        return self.set_cached_value(key, current_time, generator())
+
+    def cleanup_cached_values(self, old_limit_time):
+        while True:
+            try:
+                (old_key, old_cached_time) = self.time_queue.pop()
+            except IndexError:
+                break
+            if old_cached_time > old_limit_time:
+                self.time_queue.append((old_key, old_cached_time))
+                break
+            try:
+                del self[old_key, old_cached_time]
+            except IndexError:
+                pass
+            cached_time = self.cached_times.get(old_key)
+            if cached_time is old_cached_time:
+                try:
+                    del self.cached_times[old_key]
+                except IndexError:
+                    pass
+
+    def set_cached_value(self, key, current_time, value):
+        logger.debug("cacheing value")
+        self[key, current_time] = (value,)
+        self.cached_times[key] = current_time
         self.time_queue.appendleft((key, current_time))
-        return result
+        return value
+
 
 class MemcacheCache:
     def __init__(self, timeout):
