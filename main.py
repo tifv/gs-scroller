@@ -23,14 +23,6 @@ else:
         logger.info("Google's logging module was imported")
         logger.debug("Debug messages will be logged")
 
-try:
-    from google.appengine.api import wrap_wsgi_app
-except ImportError:
-    logger.warning("Google's appengine wrapper could not be imported")
-    wrap_wsgi_app = None
-else:
-    logger.info("Google's appengine wrapper was imported")
-
 from converters import (
     Base64Converter, DigitsConverter, DigitListConverter )
 from cache import temporary_cache
@@ -39,8 +31,6 @@ import urlread
 GOOGLE_TIMEOUT=30
 
 app = Flask(__name__)
-if wrap_wsgi_app is not None:
-    app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 app.url_map.converters['base64'] = Base64Converter
 app.url_map.converters['digits'] = DigitsConverter

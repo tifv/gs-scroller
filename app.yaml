@@ -1,5 +1,4 @@
-runtime: python39
-app_engine_apis: true
+runtime: python312
 
 handlers:
 - url: /static
