@@ -20,6 +20,7 @@ class NotResponding(Exception):
 def urlread(url, timeout=30):
     try:
         reply = urllib.request.urlopen(url, timeout=timeout)
+        return reply.read()
     except urllib.error.HTTPError as error:
         if error.code in {301, 302, 303, 307, 400, 401, 403, 404, 410}:
             raise NotFound
@@ -30,5 +31,4 @@ def urlread(url, timeout=30):
         IOError, OSError,
     ):
         raise NotResponding
-    return reply.read()
 
