@@ -24,6 +24,8 @@ def urlread(url, timeout=30):
     except urllib.error.HTTPError as error:
         if error.code in {301, 302, 303, 307, 400, 401, 403, 404, 410}:
             raise NotFound
+        if error.code in {500}:
+            raise NotResponding
         raise
     except (
         http.client.HTTPException,
