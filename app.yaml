@@ -1,4 +1,4 @@
-runtime: python312
+runtime: python313
 
 handlers:
 - url: /static
@@ -8,4 +8,7 @@ handlers:
   upload: misc/robots\.txt$
 - url: .*
   script: auto
+
+automatic_scaling:
+  max_instances: 20
 
